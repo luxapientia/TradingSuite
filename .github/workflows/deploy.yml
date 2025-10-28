@@ -1,0 +1,52 @@
+name: Deploy to Hetzner
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+
+      - name: Deploy to Hetzner
+        run: |
+          ssh -o StrictHostKeyChecking=no root@91.99.177.33 << 'EOF'
+            cd /root/trading-suite
+            git pull origin main
+            
+            # Pull latest Docker images
+            docker compose pull
+            
+            # Restart services with zero downtime
+            docker compose up -d
+            
+            # Clean up old images
+            docker image prune -f
+            
+            # Check service status
+            docker compose ps
+            
+            echo "Deployment completed successfully!"
+          EOF
+
+      - name: Verify deployment
+        run: |
+          ssh -o StrictHostKeyChecking=no root@91.99.177.33 << 'EOF'
+            # Wait for services to start
+            sleep 10
+            
+            # Check if services are healthy
+            curl -f http://localhost:8000/health && echo "✓ Monolith OK" || echo "✗ Monolith Failed"
+            curl -f http://localhost:8200/health && echo "✓ Orchestrator OK" || echo "✗ Orchestrator Failed"
+            
+            docker compose ps
+          EOF

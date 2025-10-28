@@ -41,13 +41,18 @@ jobs:
 
       - name: Verify deployment
         run: |
-          ssh -o StrictHostKeyChecking=no root@91.99.177.33 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -T root@91.99.177.33 << 'EOF'
+            set -e
+            cd /root/trading-suite || { echo "Directory not found"; exit 1; }
+
             # Wait for services to start
             sleep 10
-            
+
             # Check if services are healthy
             curl -f http://localhost:8000/health && echo "✓ Monolith OK" || echo "✗ Monolith Failed"
             curl -f http://localhost:8200/health && echo "✓ Orchestrator OK" || echo "✗ Orchestrator Failed"
-            
-            docker compose ps
+
+            # Show Docker Compose services
+            docker compose -f docker-compose.yml ps
           EOF
+

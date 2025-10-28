@@ -2,7 +2,7 @@ name: Deploy to Hetzner
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   deploy:
@@ -19,22 +19,23 @@ jobs:
 
       - name: Deploy to Hetzner
         run: |
-          ssh -o StrictHostKeyChecking=no root@91.99.177.33 << 'EOF'
-            cd /root/trading-suite
+          ssh -o StrictHostKeyChecking=no -T root@91.99.177.33 << 'EOF'
+            set -e
+            cd /root/trading-suite || exit 1
             git pull origin main
-            
+
             # Pull latest Docker images
-            docker compose pull
-            
+            docker compose -f docker-compose.yml pull
+
             # Restart services with zero downtime
-            docker compose up -d
-            
+            docker compose -f docker-compose.yml up -d
+
             # Clean up old images
             docker image prune -f
-            
+
             # Check service status
-            docker compose ps
-            
+            docker compose -f docker-compose.yml ps
+
             echo "Deployment completed successfully!"
           EOF
 

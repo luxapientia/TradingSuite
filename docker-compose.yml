@@ -1,0 +1,126 @@
+services:
+  monolith:
+    build: ./monolith
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./monolith/cache:/app/cache
+    networks:
+      - trading-network
+
+  orchestrator:
+    build: ./orchestrator
+    ports:
+      - "8200:8200"
+    environment:
+      - PYTHONPATH=/app
+      - MONOLITH_URL=http://monolith:8000
+    volumes:
+      - ./backtests:/app/backtests
+      - ./outputs:/app/outputs
+    depends_on:
+      - monolith
+    networks:
+      - trading-network
+
+  supertrend:
+    build: ./services/supertrend
+    ports:
+      - "8101:8000"
+    environment:
+      - PYTHONPATH=/app
+      - MONOLITH_URL=http://monolith:8000
+    depends_on:
+      - monolith
+    networks:
+      - trading-network
+
+  alphatrend:
+    build: ./services/alphatrend
+    ports:
+      - "8102:8000"
+    environment:
+      - PYTHONPATH=/app
+      - MONOLITH_URL=http://monolith:8000
+    depends_on:
+      - monolith
+    networks:
+      - trading-network
+
+  ichimoku:
+    build: ./services/ichimoku
+    ports:
+      - "8103:8000"
+    environment:
+      - PYTHONPATH=/app
+      - MONOLITH_URL=http://monolith:8000
+    depends_on:
+      - monolith
+    networks:
+      - trading-network
+
+  qqe_ssl_wae:
+    build: ./services/qqe_ssl_wae
+    ports:
+      - "8104:8000"
+    environment:
+      - PYTHONPATH=/app
+      - MONOLITH_URL=http://monolith:8000
+    depends_on:
+      - monolith
+    networks:
+      - trading-network
+
+  turtle:
+    build: ./services/turtle
+    ports:
+      - "8105:8000"
+    environment:
+      - PYTHONPATH=/app
+      - MONOLITH_URL=http://monolith:8000
+    depends_on:
+      - monolith
+    networks:
+      - trading-network
+
+  meanrev:
+    build: ./services/meanrev
+    ports:
+      - "8106:8000"
+    environment:
+      - PYTHONPATH=/app
+      - MONOLITH_URL=http://monolith:8000
+    depends_on:
+      - monolith
+    networks:
+      - trading-network
+
+  trend:
+    build: ./services/trend
+    ports:
+      - "8107:8000"
+    environment:
+      - PYTHONPATH=/app
+      - MONOLITH_URL=http://monolith:8000
+    depends_on:
+      - monolith
+    networks:
+      - trading-network
+
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "8300:8501"
+    environment:
+      - PYTHONPATH=/app
+      - ORCHESTRATOR_URL=http://orchestrator:8200
+    depends_on:
+      - orchestrator
+    networks:
+      - trading-network
+
+networks:
+  trading-network:
+    driver: bridge
